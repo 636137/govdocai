@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GovDocAI - Document Intelligence</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; }
+    .upload-area { 
+      border: 3px dashed #005ea2; 
+      padding: 40px; 
+      text-align: center; 
+      margin: 20px 0;
+      cursor: pointer;
+    }
+    .upload-area:hover { background: #f0f0f0; }
+    button { background: #005ea2; color: white; padding: 12px 24px; border: none; cursor: pointer; }
+    .result { margin-top: 30px; padding: 20px; background: #f5f5f5; }
+    .field { padding: 10px; margin: 5px 0; background: white; border-left: 4px solid #005ea2; }
+    .doc-type { display: inline-block; padding: 5px 15px; background: #005ea2; color: white; border-radius: 20px; }
+  </style>
+</head>
+<body>
+  <h1>📄 GovDocAI</h1>
+  <p>Upload government documents for automatic processing</p>
+  
+  <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+    <h2>📤 Drop or Click to Upload</h2>
+    <p>Supported: Passport, Tax Forms, Driver's License, Birth Certificate</p>
+    <input type="file" id="fileInput" style="display: none;" onchange="uploadFile()">
+  </div>
+  
+  <div id="result" class="result" style="display: none;"></div>
+  
+  <div id="documents" style="margin-top: 30px;"></div>
+  
+  <script>
+    async function uploadFile() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('document', file);
+      
+      const res = await fetch('http://localhost:3007/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const doc = await res.json();
+      displayResult(doc);
+      loadDocuments();
+    }
+    
+    function displayResult(doc) {
+      const div = document.getElementById('result');
+      let html = `
+        <h2>✅ Document Processed</h2>
+        <p><strong>Filename:</strong> ${doc.filename}</p>
+        <p><strong>Type:</strong> <span class="doc-type">${doc.type.replace('_', ' ').toUpperCase()}</span></p>
+        <h3>Extracted Text:</h3>
+        <pre style="background: white; padding: 15px; border-radius: 5px;">${doc.text}</pre>
+        <h3>Extracted Fields:</h3>
+      `;
+      
+      for (const [key, value] of Object.entries(doc.fields)) {
+        html += `<div class="field"><strong>${key}:</strong> ${value}</div>`;
+      }
+      
+      div.innerHTML = html;
+      div.style.display = 'block';
+    }
+    
+    async function loadDocuments() {
+      const res = await fetch('http://localhost:3007/api/documents');
+      const docs = await res.json();
+      
+      const div = document.getElementById('documents');
+      if (docs.length === 0) return;
+      
+      let html = '<h2>Recent Documents</h2>';
+      docs.slice(-5).reverse().forEach(doc => {
+        html += `
+          <div class="field">
+            <strong>${doc.filename}</strong> - 
+            <span class="doc-type">${doc.type}</span> - 
+            ${new Date(doc.uploadedAt).toLocaleString()}
+          </div>
+        `;
+      });
+      div.innerHTML = html;
+    }
+    
+    loadDocuments();
+  </script>
+</body>
+</html>

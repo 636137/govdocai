@@ -1,0 +1,8 @@
+{
+  "name": "govdocai",
+  "version": "1.0.0",
+  "description": "Document intelligence and OCR platform",
+  "scripts": {
+    "dev": "cd backend && node server.js"
+  }
+}
