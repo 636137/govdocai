@@ -4,5 +4,6 @@
   "description": "Document intelligence and OCR platform",
   "scripts": {
     "dev": "cd backend && node server.js"
-  }
+  },
+  "license": "UNLICENSED"
 }
